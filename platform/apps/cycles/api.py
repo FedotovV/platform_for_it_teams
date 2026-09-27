@@ -15,6 +15,21 @@ def cycle_brief(cycle_id):
     }
 
 
+def cycles_for_team(team_id):
+    rows = []
+    for cycle in Cycle.objects.filter(team_id=team_id).order_by("created_at", "id"):
+        rows.append(
+            {
+                "id": cycle.id,
+                "kind": cycle.kind,
+                "status": cycle.status,
+                "scheduled_at": cycle.scheduled_at,
+                "closed_at": cycle.closed_at,
+            }
+        )
+    return rows
+
+
 def survey_cycle_ids(team_id):
     return list(
         Cycle.objects.filter(team_id=team_id, kind=Cycle.KIND_SURVEY)

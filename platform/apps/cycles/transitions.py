@@ -26,11 +26,15 @@ def advance(cycle, user_id):
     target = FORWARD[index + 1]
     if target == Cycle.STATUS_CLOSED and not _outcome_recorded(cycle):
         raise CycleError(outcome_missing_detail(cycle.kind))
+    previous = cycle.status
     cycle.status = target
     if target == Cycle.STATUS_CLOSED:
         cycle.closed_at = timezone.now()
         cycle.closed_by = user_id
     cycle.save()
+    from apps.history.api import record_status_change
+
+    record_status_change("cycle", cycle.id, previous, target, user_id)
     return cycle
 
 
