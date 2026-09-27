@@ -87,6 +87,14 @@ def selected_team_id(user_id):
     return row.team_id
 
 
+def organization_team_ids(organization_id):
+    return list(
+        Team.objects.filter(organization_id=organization_id)
+        .order_by("name", "id")
+        .values_list("id", flat=True)
+    )
+
+
 def select_team(user_id, team_id):
     if not can_see_team(user_id, team_id):
         return False
