@@ -4,6 +4,7 @@ from apps.teams import api as teams_api
 CREATE_CYCLE = "create_cycle"
 ADVANCE_CYCLE = "advance_cycle"
 SET_SURVEY_INTERVAL = "set_survey_interval"
+CARRY_PROBLEM = "carry_problem"
 KNOWN_ACTIONS = {CREATE_CYCLE, ADVANCE_CYCLE, SET_SURVEY_INTERVAL}
 CREATE_CYCLE_DENIED_ROLES = {teams_api.ROLE_MEMBER, teams_api.ROLE_FACILITATOR}
 DEFAULT_GRANTS = {
@@ -43,6 +44,13 @@ def can_manage_roster(user_id, team_id):
 
 def can(user_id, team_id, action):
     """Проверка действия команды. Создание цикла участником и фасилитатором закрыто в коде."""
+    if action == CARRY_PROBLEM:
+        if not teams_api.can_see_team(user_id, team_id):
+            return False
+        return teams_api.membership_role(user_id, team_id) in {
+            teams_api.ROLE_MANAGER,
+            teams_api.ROLE_LEADER,
+        }
     if action not in KNOWN_ACTIONS:
         return False
     if not teams_api.can_see_team(user_id, team_id):

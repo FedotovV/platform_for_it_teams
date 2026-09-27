@@ -7,7 +7,7 @@ from django.test import TestCase
 from apps.identity.api import current_user_id
 from apps.identity.models import User
 
-EMPTY_APPS = ("problems", "history")
+EMPTY_APPS = ("history",)
 
 
 class HealthTests(TestCase):
