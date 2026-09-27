@@ -76,7 +76,13 @@ class UiSmoke(TestCase):
         self.client.post(cycle_url, {"form": "summary", "text": "План и следующие шаги"})
         snap = self.client.post(
             cycle_url,
-            {"form": "snapshot", "scale_version": "", "code_0": "block-1", "score_0": "2"},
+            {
+                "form": "snapshot",
+                "scale_version": "",
+                "scale_maximum": "10",
+                "code_0": "block-1",
+                "score_0": "2",
+            },
         )
         self.assertEqual(snap.status_code, 302, snap.content[:400])
         closed = self.client.post(cycle_url, {"form": "advance"})
@@ -89,7 +95,10 @@ class UiSmoke(TestCase):
         second = self.client.post("/workspace/cycles/", {"kind": "survey"})
         url2 = second.url
         cycle2_id = url2.rstrip("/").rsplit("/", 1)[-1]
-        self.client.post(url2, {"form": "snapshot", "code_0": "block-1", "score_0": "5"})
+        self.client.post(
+            url2,
+            {"form": "snapshot", "code_0": "block-1", "score_0": "5", "scale_maximum": "10"},
+        )
         problem = self.client.post(
             "/workspace/problems/",
             {
@@ -131,7 +140,9 @@ class UiSmoke(TestCase):
 
         radar = self.client.get("/teams/selected/radar/")
         self.assertContains(radar, "block-1: 5")
-        self.assertContains(radar, "Цвет секторов не задан")
+        self.assertContains(radar, 'id="scale-maximum">10<')
+        self.assertContains(radar, "#e07a2f")
+        self.assertNotContains(radar, "Цвет секторов не задан")
         self.assertNotContains(radar, "красный")
 
         review = self.client.post("/workspace/cycles/", {"kind": "review"})

@@ -1,14 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Команды{% endblock %}
 {% block content %}
-  <h1>Команды</h1>
-  <p id="session-user">Вы вошли. Идентификатор: {{ user_id }}</p>
-  {% if user_name %}<p>{{ user_name }}</p>{% endif %}
+  <header class="page-head">
+    <div>
+      <h1>Команды</h1>
+      <p class="lede" id="session-user">Вы вошли. Идентификатор: {{ user_id }}</p>
+      {% if user_name %}<p class="lede">{{ user_name }}</p>{% endif %}
+    </div>
+  </header>
   {% if teams %}
-    <ul id="team-list" class="plain">
+    <ul id="team-list" class="plain team-list">
       {% for team in teams %}
         <li class="card team{% if team.selected %} selected{% endif %}" data-team-name="{{ team.name }}">
-          <div>
+          <div class="team-main">
             <strong>{{ team.name }}</strong>
             {% if team.role_label %}<span class="muted">{{ team.role_label }}</span>{% endif %}
             {% if team.selected %}<span class="status">выбрана</span>{% endif %}
@@ -22,6 +26,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Нет доступных команд.</p>
+    <p class="empty panel">Нет доступных команд.</p>
   {% endif %}
 {% endblock %}

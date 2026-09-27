@@ -1,47 +1,67 @@
 {% extends "base.html" %}
 {% block title %}{{ team.name }}{% endblock %}
 {% block content %}
-  <h1>{{ team.name }}</h1>
-  {% if role_label %}<p>Ваша роль: {{ role_label }}</p>{% endif %}
+  <header class="page-head">
+    <div>
+      <h1>{{ team.name }}</h1>
+      {% if role_label %}<p class="lede">Ваша роль: {{ role_label }}</p>{% endif %}
+    </div>
+  </header>
   {% if error %}<p class="error" id="team-error">{{ error }}</p>{% endif %}
-  <p>Интервал повтора опроса: <span id="interval-months">{{ interval_months }}</span> мес.
-    {% if interval_months == 3 %}Это квартал, значение по умолчанию.{% endif %}
-  </p>
-  <p class="muted">Интервал хранится числом месяцев. Дата следующего опроса от закрытия предыдущего сама не ставится и статус не меняет.</p>
-  {% if can_set_interval %}
-    <form id="interval-form" method="post">
-      {% csrf_token %}
-      <input type="hidden" name="form" value="interval">
-      <label for="interval_months">Свой интервал, месяцы</label>
-      <input id="interval_months" name="interval_months" type="number" min="1" value="{{ interval_months }}" required>
-      <button type="submit">Сохранить интервал</button>
-    </form>
-  {% endif %}
-  <p id="create-cycle-flag">Создание цикла: {% if can_create_cycle %}можно{% else %}нельзя{% endif %}</p>
-  <p><a href="{% url 'workspace-grants' team.id %}">Матрица прав</a></p>
-  <p><a href="{% url 'workspace-cycles' %}">Циклы выбранной команды</a></p>
-  <p><a href="{% url 'team-history-page' team.id %}">История</a></p>
-  <h2>Состав</h2>
-  <ul class="plain" id="member-list">
-    {% for member in members %}
-      <li>{{ member.label }} — {{ member.role_label }}</li>
-    {% empty %}
-      <li>Состава нет.</li>
-    {% endfor %}
-  </ul>
-  <form id="member-form" method="post">
-    {% csrf_token %}
-    <input type="hidden" name="form" value="member">
-    <label for="login">Логин человека</label>
-    <input id="login" name="login" type="text" required>
-    <label for="role">Роль</label>
-    <select id="role" name="role">
-      {% for code, label in roles %}
-        <option value="{{ code }}">{{ label }}</option>
+
+  <section class="panel">
+    <h2>Интервал опроса</h2>
+    <p>Интервал повтора опроса: <span id="interval-months">{{ interval_months }}</span> мес.
+      {% if interval_months == 3 %}Это квартал, значение по умолчанию.{% endif %}
+    </p>
+    <p class="muted">Интервал хранится числом месяцев. Дата следующего опроса от закрытия предыдущего сама не ставится и статус не меняет.</p>
+    {% if can_set_interval %}
+      <form id="interval-form" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="form" value="interval">
+        <label for="interval_months">Свой интервал, месяцы</label>
+        <input id="interval_months" name="interval_months" type="number" min="1" value="{{ interval_months }}" required>
+        <button type="submit">Сохранить интервал</button>
+      </form>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>Доступ</h2>
+    <p id="create-cycle-flag">Создание цикла: {% if can_create_cycle %}можно{% else %}нельзя{% endif %}</p>
+    <p class="link-row">
+      <a href="{% url 'workspace-grants' team.id %}">Матрица прав</a>
+      <a href="{% url 'workspace-cycles' %}">Циклы выбранной команды</a>
+      <a href="{% url 'team-history-page' team.id %}">История</a>
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>Состав</h2>
+    <ul class="plain" id="member-list">
+      {% for member in members %}
+        <li>{{ member.label }} — {{ member.role_label }}</li>
+      {% empty %}
+        <li class="empty">Состава нет.</li>
       {% endfor %}
-    </select>
-    <button type="submit">Записать участие</button>
-  </form>
-  <h2>Вложения</h2>
-  <p id="team-no-attachment">Вложение к команде не добавляется. Файл крепится к проблеме, действию или циклу.</p>
+    </ul>
+    <form id="member-form" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="form" value="member">
+      <label for="login">Логин человека</label>
+      <input id="login" name="login" type="text" required>
+      <label for="role">Роль</label>
+      <select id="role" name="role">
+        {% for code, label in roles %}
+          <option value="{{ code }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Записать участие</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Вложения</h2>
+    <p id="team-no-attachment" class="muted">Вложение к команде не добавляется. Файл крепится к проблеме, действию или циклу.</p>
+  </section>
 {% endblock %}

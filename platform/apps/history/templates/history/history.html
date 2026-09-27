@@ -1,23 +1,31 @@
 {% extends "base.html" %}
+{% load radar_bands %}
 {% block title %}История{% endblock %}
 {% block content %}
-  <h1>История</h1>
-  <ul id="history-list" class="plain">
-    {% for cycle in cycles %}
-      <li>
-        {% if cycle.kind == "survey" %}опрос{% elif cycle.kind == "review" %}ревью{% elif cycle.kind == "retro" %}ретро{% else %}{{ cycle.kind }}{% endif %}
-        {% if cycle.status == "draft" %}черновик{% elif cycle.status == "collect" %}сбор{% elif cycle.status == "review" %}разбор{% elif cycle.status == "closed" %}закрыт{% else %}{{ cycle.status }}{% endif %}
-        {% if cycle.scheduled_at %}<span>дата {{ cycle.scheduled_at }}</span>{% endif %}
-        {% if cycle.closed_at %}<span>закрыт {{ cycle.closed_at }}</span>{% endif %}
-        <a href="{% url 'workspace-cycle' cycle.id %}">открыть</a>
-        {% if cycle.snapshot %}
-          {% for block in cycle.snapshot.blocks %}
-            {{ block.code }}: {{ block.score }}
-          {% endfor %}
-        {% endif %}
-      </li>
-    {% empty %}
-      <li>Записей нет.</li>
-    {% endfor %}
-  </ul>
+  <header class="page-head">
+    <div>
+      <h1>История</h1>
+      <p class="lede">Закрытые и открытые циклы выбранной команды.</p>
+    </div>
+  </header>
+  <section class="panel">
+    <ul id="history-list" class="plain">
+      {% for cycle in cycles %}
+        <li>
+          <span>{% if cycle.kind == "survey" %}опрос{% elif cycle.kind == "review" %}ревью{% elif cycle.kind == "retro" %}ретро{% else %}{{ cycle.kind }}{% endif %}</span>
+          <span class="status">{% if cycle.status == "draft" %}черновик{% elif cycle.status == "collect" %}сбор{% elif cycle.status == "review" %}разбор{% elif cycle.status == "closed" %}закрыт{% else %}{{ cycle.status }}{% endif %}</span>
+          {% if cycle.scheduled_at %}<span class="muted">дата {{ cycle.scheduled_at }}</span>{% endif %}
+          {% if cycle.closed_at %}<span class="muted">закрыт {{ cycle.closed_at }}</span>{% endif %}
+          <a href="{% url 'workspace-cycle' cycle.id %}">открыть</a>
+          {% if cycle.snapshot %}
+            {% for block in cycle.snapshot.blocks %}
+              <span>{{ block.code }}: {{ block.score }}{% with fill=block.score|score_fill:cycle.snapshot.scale_maximum %}{% if fill %} <span class="swatch" style="background: {{ fill }}"></span>{% endif %}{% endwith %}</span>
+            {% endfor %}
+          {% endif %}
+        </li>
+      {% empty %}
+        <li class="empty">Записей нет.</li>
+      {% endfor %}
+    </ul>
+  </section>
 {% endblock %}

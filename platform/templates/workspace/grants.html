@@ -1,21 +1,29 @@
 {% extends "base.html" %}
 {% block title %}Права {{ team.name }}{% endblock %}
 {% block content %}
-  <h1>Матрица прав</h1>
-  <p>{{ team.name }}</p>
+  <header class="page-head">
+    <div>
+      <h1>Матрица прав</h1>
+      <p class="lede">{{ team.name }}</p>
+    </div>
+    <a class="button ghost" href="{% url 'workspace-team' team.id %}">К команде</a>
+  </header>
   {% if error %}<p class="error" id="grant-error">{{ error }}</p>{% endif %}
-  <table id="grant-list">
-    <thead><tr><th>Действие</th><th>Роль</th></tr></thead>
-    <tbody>
-      {% for grant in grants %}
-        <tr><td>{{ grant.action_label }}</td><td>{{ grant.role_label }}</td></tr>
-      {% empty %}
-        <tr><td colspan="2">Прав нет.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <form id="grant-form" method="post">
+  <section class="panel">
+    <table id="grant-list">
+      <thead><tr><th>Действие</th><th>Роль</th></tr></thead>
+      <tbody>
+        {% for grant in grants %}
+          <tr><td>{{ grant.action_label }}</td><td>{{ grant.role_label }}</td></tr>
+        {% empty %}
+          <tr><td colspan="2" class="empty">Прав нет.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <form id="grant-form" class="panel" method="post">
     {% csrf_token %}
+    <h2>Добавить право</h2>
     <label for="action">Действие</label>
     <select id="action" name="action">
       {% for code, label in actions %}
@@ -30,5 +38,4 @@
     </select>
     <button type="submit">Добавить право</button>
   </form>
-  <p><a href="{% url 'workspace-team' team.id %}">К команде</a></p>
 {% endblock %}

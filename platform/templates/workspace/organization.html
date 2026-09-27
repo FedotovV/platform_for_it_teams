@@ -1,35 +1,62 @@
 {% extends "base.html" %}
+{% load radar_bands %}
 {% block title %}Агрегаты{% endblock %}
 {% block content %}
-  <h1>Агрегаты снимков</h1>
-  <p>Баллы блоков по командам: последний снимок и предыдущий, если он есть.</p>
+  <header class="page-head">
+    <div>
+      <h1>Агрегаты снимков</h1>
+      <p class="lede">Баллы блоков по командам: последний снимок и предыдущий, если он есть.</p>
+    </div>
+  </header>
   <div id="org-aggregates">
     {% for team in teams %}
       <section class="card" data-team-name="{{ team.name }}">
         <h2>{{ team.name }}</h2>
-        <h3>Последний снимок</h3>
-        {% if team.latest %}
-          <ul>
-            {% for block in team.latest.blocks %}
-              <li>{{ block.code }}: {{ block.score }}</li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p>Снимка нет.</p>
-        {% endif %}
-        <h3>Предыдущий снимок</h3>
-        {% if team.previous %}
-          <ul>
-            {% for block in team.previous.blocks %}
-              <li>{{ block.code }}: {{ block.score }}</li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p>Предыдущего снимка нет.</p>
-        {% endif %}
+        <div class="agg-pair">
+          <div>
+            <h3>Последний снимок</h3>
+            {% if team.latest %}
+              <ul class="score-list">
+                {% for block in team.latest.blocks %}
+                  <li>
+                    <span>{{ block.code }}: {{ block.score }}</span>
+                    {% with fill=block.score|score_fill:team.latest.scale_maximum %}
+                      {% if fill %}
+                        <span class="swatch" style="background: {{ fill }}"></span>
+                        <span class="muted">{{ block.score|score_percent:team.latest.scale_maximum }}%</span>
+                      {% endif %}
+                    {% endwith %}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="empty">Снимка нет.</p>
+            {% endif %}
+          </div>
+          <div>
+            <h3>Предыдущий снимок</h3>
+            {% if team.previous %}
+              <ul class="score-list">
+                {% for block in team.previous.blocks %}
+                  <li>
+                    <span>{{ block.code }}: {{ block.score }}</span>
+                    {% with fill=block.score|score_fill:team.previous.scale_maximum %}
+                      {% if fill %}
+                        <span class="swatch" style="background: {{ fill }}"></span>
+                        <span class="muted">{{ block.score|score_percent:team.previous.scale_maximum }}%</span>
+                      {% endif %}
+                    {% endwith %}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="empty">Предыдущего снимка нет.</p>
+            {% endif %}
+          </div>
+        </div>
       </section>
     {% empty %}
-      <p>Команд нет.</p>
+      <p class="empty panel">Команд нет.</p>
     {% endfor %}
   </div>
 {% endblock %}

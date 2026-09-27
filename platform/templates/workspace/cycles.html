@@ -1,37 +1,46 @@
 {% extends "base.html" %}
+{% load radar_bands %}
 {% block title %}Циклы{% endblock %}
 {% block content %}
-  <h1>Циклы</h1>
-  {% if team %}
-    <p>Команда: {{ team.name }}</p>
-  {% else %}
-    <p>Сначала выберите команду.</p>
-  {% endif %}
+  <header class="page-head">
+    <div>
+      <h1>Циклы</h1>
+      {% if team %}
+        <p class="lede">Команда: {{ team.name }}</p>
+      {% else %}
+        <p class="lede">Сначала выберите команду.</p>
+      {% endif %}
+    </div>
+  </header>
   {% if error %}<p class="error" id="cycle-error">{{ error }}</p>{% endif %}
-  <form id="create-cycle" method="post">
+  <form id="create-cycle" class="panel inline-form" method="post">
     {% csrf_token %}
-    <label for="kind">Вид</label>
-    <select id="kind" name="kind">
-      {% for code, label in kinds %}
-        <option value="{{ code }}">{{ label }}</option>
-      {% endfor %}
-    </select>
+    <div>
+      <label for="kind">Вид</label>
+      <select id="kind" name="kind">
+        {% for code, label in kinds %}
+          <option value="{{ code }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <button type="submit">Создать цикл</button>
   </form>
-  <ul class="plain" id="cycle-list">
-    {% for cycle in cycles %}
-      <li>
-        <a href="{% url 'workspace-cycle' cycle.id %}">{{ cycle.kind_label }}</a>
-        <span class="status">{{ cycle.status_label }}</span>
-        <span class="muted">{{ cycle.id }}</span>
-        {% if cycle.snapshot %}
-          {% for block in cycle.snapshot.blocks %}
-            <span>{{ block.code }}: {{ block.score }}</span>
-          {% endfor %}
-        {% endif %}
-      </li>
-    {% empty %}
-      <li>Циклов нет.</li>
-    {% endfor %}
-  </ul>
+  <section class="panel">
+    <ul class="plain" id="cycle-list">
+      {% for cycle in cycles %}
+        <li>
+          <a href="{% url 'workspace-cycle' cycle.id %}">{{ cycle.kind_label }}</a>
+          <span class="status">{{ cycle.status_label }}</span>
+          <span class="muted">{{ cycle.id }}</span>
+          {% if cycle.snapshot %}
+            {% for block in cycle.snapshot.blocks %}
+              <span>{{ block.code }}: {{ block.score }}{% with fill=block.score|score_fill:cycle.snapshot.scale_maximum %}{% if fill %} <span class="swatch" style="background: {{ fill }}"></span> {{ block.score|score_percent:cycle.snapshot.scale_maximum }}%{% endif %}{% endwith %}</span>
+            {% endfor %}
+          {% endif %}
+        </li>
+      {% empty %}
+        <li class="empty">Циклов нет.</li>
+      {% endfor %}
+    </ul>
+  </section>
 {% endblock %}
