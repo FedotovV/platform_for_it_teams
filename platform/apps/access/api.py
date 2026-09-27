@@ -2,9 +2,19 @@ from apps.access.models import TeamGrant
 from apps.teams import api as teams_api
 
 CREATE_CYCLE = "create_cycle"
-KNOWN_ACTIONS = {CREATE_CYCLE}
+ADVANCE_CYCLE = "advance_cycle"
+SET_SURVEY_INTERVAL = "set_survey_interval"
+KNOWN_ACTIONS = {CREATE_CYCLE, ADVANCE_CYCLE, SET_SURVEY_INTERVAL}
 CREATE_CYCLE_DENIED_ROLES = {teams_api.ROLE_MEMBER, teams_api.ROLE_FACILITATOR}
-DEFAULT_CREATE_CYCLE_ROLES = (teams_api.ROLE_MANAGER, teams_api.ROLE_LEADER)
+DEFAULT_GRANTS = {
+    CREATE_CYCLE: (teams_api.ROLE_MANAGER, teams_api.ROLE_LEADER),
+    ADVANCE_CYCLE: (
+        teams_api.ROLE_MANAGER,
+        teams_api.ROLE_LEADER,
+        teams_api.ROLE_FACILITATOR,
+    ),
+    SET_SURVEY_INTERVAL: (teams_api.ROLE_MANAGER, teams_api.ROLE_LEADER),
+}
 
 
 class AccessError(Exception):
@@ -14,12 +24,13 @@ class AccessError(Exception):
 
 
 def seed_default_grants(team_id):
-    for role in DEFAULT_CREATE_CYCLE_ROLES:
-        TeamGrant.objects.get_or_create(
-            team_id=team_id,
-            action=CREATE_CYCLE,
-            role=role,
-        )
+    for action, roles in DEFAULT_GRANTS.items():
+        for role in roles:
+            TeamGrant.objects.get_or_create(
+                team_id=team_id,
+                action=action,
+                role=role,
+            )
 
 
 def can_manage_roster(user_id, team_id):
