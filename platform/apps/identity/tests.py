@@ -7,7 +7,7 @@ from django.test import TestCase
 from apps.identity.api import current_user_id
 from apps.identity.models import User
 
-EMPTY_APPS = ("teams", "access", "cycles", "diagnostics", "problems", "history")
+EMPTY_APPS = ("cycles", "diagnostics", "problems", "history")
 
 
 class HealthTests(TestCase):
@@ -73,12 +73,13 @@ class EmptyModuleTests(TestCase):
 
     def test_other_apps_do_not_import_identity_models(self):
         apps_dir = Path(__file__).resolve().parents[1]
-        for label in EMPTY_APPS:
-            for path in (apps_dir / label).rglob("*.py"):
-                tree = ast.parse(path.read_text(encoding="utf-8"))
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.ImportFrom) and node.module:
-                        self.assertNotIn("identity.models", node.module)
-                    if isinstance(node, ast.Import):
-                        for alias in node.names:
-                            self.assertNotIn("identity.models", alias.name)
+        for path in apps_dir.rglob("*.py"):
+            if "identity" in path.parts:
+                continue
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module:
+                    self.assertNotIn("identity.models", node.module)
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        self.assertNotIn("identity.models", alias.name)
