@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Радар</title>
+</head>
+<body>
+  <h1>Радар</h1>
+  {% if snapshot %}
+    <p>Версия шкалы: {% if snapshot.scale_version %}{{ snapshot.scale_version }}{% else %}нет{% endif %}</p>
+    <ul>
+      {% for block in snapshot.blocks %}
+        <li>{{ block.code }}: {{ block.score }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Снимка нет.</p>
+  {% endif %}
+</body>
+</html>
