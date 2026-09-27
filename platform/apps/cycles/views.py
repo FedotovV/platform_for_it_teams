@@ -54,6 +54,10 @@ def cycle_payload(cycle):
         payload["review"] = _review_payload(cycle)
     if cycle.kind == Cycle.KIND_RETRO:
         payload["retro"] = _retro_payload(cycle)
+    if cycle.kind == Cycle.KIND_SURVEY:
+        from apps.diagnostics.api import snapshot_for
+
+        payload["snapshot"] = snapshot_for(cycle.id)
     return payload
 
 

@@ -8,4 +8,5 @@ urlpatterns = [
     path("", include("apps.teams.urls")),
     path("", include("apps.access.urls")),
     path("", include("apps.cycles.urls")),
+    path("", include("apps.diagnostics.urls")),
 ]
