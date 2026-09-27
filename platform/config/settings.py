@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "apps.diagnostics.apps.DiagnosticsConfig",
     "apps.problems.apps.ProblemsConfig",
     "apps.history.apps.HistoryConfig",
+    "apps.workspace.apps.WorkspaceConfig",
 ]
 
 MIDDLEWARE = [
@@ -50,6 +51,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "apps.workspace.context.workspace",
             ],
         },
     },
@@ -88,5 +90,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+ATTACHMENT_ROOT = BASE_DIR / "var" / "attachments"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

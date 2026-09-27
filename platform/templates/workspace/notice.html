@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Сообщение{% endblock %}
+{% block content %}
+  <h1>Сообщение</h1>
+  <p class="error" id="notice">{{ detail }}</p>
+  <p><a href="{% url 'home' %}">К командам</a></p>
+{% endblock %}

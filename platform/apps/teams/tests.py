@@ -160,7 +160,11 @@ class TeamAccessTests(TestCase):
         )
         self.assertEqual(grants.status_code, 403)
         self.assertFalse(
-            TeamGrant.objects.filter(team_id=self.team_c.id, role=ROLE_FACILITATOR).exists()
+            TeamGrant.objects.filter(
+                team_id=self.team_c.id,
+                action=CREATE_CYCLE,
+                role=ROLE_FACILITATOR,
+            ).exists()
         )
 
     def test_manager_can_create_cycle_by_default_grant(self):

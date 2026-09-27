@@ -87,6 +87,14 @@ def selected_team_id(user_id):
     return row.team_id
 
 
+def organization_team_ids(organization_id):
+    return list(
+        Team.objects.filter(organization_id=organization_id)
+        .order_by("name", "id")
+        .values_list("id", flat=True)
+    )
+
+
 def select_team(user_id, team_id):
     if not can_see_team(user_id, team_id):
         return False
@@ -95,3 +103,11 @@ def select_team(user_id, team_id):
         defaults={"team_id": team_id},
     )
     return True
+
+
+def memberships_for(user_id, team_id):
+    """Состав видимой команды. None, если команду нельзя видеть."""
+    if not can_see_team(user_id, team_id):
+        return None
+    rows = Membership.objects.filter(team_id=team_id).order_by("role", "user_id")
+    return [{"user_id": row.user_id, "role": row.role} for row in rows]

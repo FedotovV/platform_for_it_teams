@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ cycle.kind_label }}{% endblock %}
+{% block content %}
+  <h1>{{ cycle.kind_label }}</h1>
+  <p>Идентификатор: <span id="cycle-id">{{ cycle.id }}</span></p>
+  <p>Статус: <span class="status" id="cycle-status">{{ cycle.status_label }}</span></p>
+  <p>Дата и время: <span id="cycle-scheduled">{% if cycle.scheduled_at %}{{ cycle.scheduled_at }}{% else %}не задана{% endif %}</span></p>
+  <p class="muted">Запись даты статус не меняет.</p>
+  {% if cycle.closed_at %}
+    <p id="cycle-closed">Закрыт: {{ cycle.closed_at }}{% if cycle.closed_by_label %}, {{ cycle.closed_by_label }}{% endif %}</p>
+  {% endif %}
+  {% if error %}<p class="error" id="cycle-error">{{ error }}</p>{% endif %}
+
+  <form id="schedule-form" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="form" value="schedule">
+    <label for="scheduled_at">Дата и время</label>
+    <input id="scheduled_at" name="scheduled_at" type="datetime-local" value="{{ cycle.schedule_input }}">
+    <button type="submit">Сохранить дату</button>
+  </form>
+
+  {% if cycle.kind == "survey" or cycle.kind == "review" %}
+    <form id="summary-form" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="form" value="summary">
+      <label for="summary-text">{% if cycle.kind == "review" %}Резюме итогов{% else %}Резюме: план и следующие шаги{% endif %}</label>
+      <textarea id="summary-text" name="text">{{ cycle.summary|default:"" }}</textarea>
+      <button type="submit">Сохранить резюме</button>
+    </form>
+  {% endif %}
+
+  {% if cycle.kind == "review" %}
+    <form id="review-form" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="form" value="review">
+      <h2>Состав ревью</h2>
+      {% for name, label, value in review_fields %}
+        <label for="{{ name }}">{{ label }}</label>
+        <textarea id="{{ name }}" name="{{ name }}">{{ value }}</textarea>
+      {% endfor %}
+      <button type="submit">Сохранить ревью</button>
+    </form>
+  {% endif %}
+
+  {% if cycle.kind == "retro" %}
+    <form id="retro-form" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="form" value="retro">
+      <label for="plan">План ретро</label>
+      <textarea id="plan" name="plan">{{ retro_plan }}</textarea>
+      <label for="artifacts">Артефакты, по одному на строку</label>
+      <textarea id="artifacts" name="artifacts">{{ retro_artifacts }}</textarea>
+      <button type="submit">Сохранить ретро</button>
+    </form>
+  {% endif %}
+
+  {% if cycle.kind == "survey" %}
+    <form id="snapshot-form" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="form" value="snapshot">
+      <h2>Снимок баллов</h2>
+      <label for="scale_version">Версия шкалы</label>
+      <input id="scale_version" name="scale_version" type="text" value="{{ cycle.snapshot.scale_version|default:'' }}">
+      {% for block in blocks %}
+        <div class="row">
+          <input name="code_{{ forloop.counter0 }}" type="text" placeholder="код блока" value="{{ block.code }}">
+          <input name="score_{{ forloop.counter0 }}" type="text" placeholder="балл" value="{{ block.score }}">
+        </div>
+      {% endfor %}
+      <button type="submit">Сохранить снимок</button>
+    </form>
+    {% if cycle.snapshot %}
+      <ul id="snapshot-scores">
+        {% for block in cycle.snapshot.blocks %}
+          <li>{{ block.code }}: {{ block.score }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+
+  {% if next_label %}
+    <form id="advance-form" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="form" value="advance">
+      <button type="submit">{{ next_label }}</button>
+    </form>
+  {% else %}
+    <p id="cycle-closed-note">Цикл закрыт и остаётся записью.</p>
+  {% endif %}
+
+  <h2>Вложение</h2>
+  <ul id="file-list">
+    {% for file in files %}
+      <li><a href="{% url 'attachment' file.id %}">{{ file.filename }}</a></li>
+    {% empty %}
+      <li>Файлов нет.</li>
+    {% endfor %}
+  </ul>
+  <form id="attachment-form" method="post" action="{% url 'workspace-attachment' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="target_kind" value="cycle">
+    <input type="hidden" name="target_id" value="{{ cycle.id }}">
+    <input type="hidden" name="next" value="{{ request.path }}">
+    <input type="file" name="file" required>
+    <button type="submit">Приложить файл</button>
+  </form>
+
+  <h2>Смены статусов</h2>
+  <ul id="status-changes" class="plain">
+    {% for change in changes %}
+      <li>{{ change.from_label }} → {{ change.to_label }} — {{ change.actor_label }}, {{ change.at }}</li>
+    {% empty %}
+      <li>Смен ещё нет.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
