@@ -3,6 +3,7 @@ import json
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from apps.cycles.models import Cycle
 from apps.teams.api import ROLE_FACILITATOR, ROLE_MANAGER, ROLE_MEMBER
 from apps.teams.models import Membership
 from apps.teams.services import add_person, create_organization, create_team
@@ -125,10 +126,63 @@ class SurveyCycleTests(TestCase):
         again = self.client.get(f"/api/teams/{self.team.id}/survey-interval/")
         self.assertEqual(again.json()["interval_months"], 6)
 
-    def test_review_kind_is_not_created_yet(self):
+    def test_review_and_retro_use_the_same_transitions(self):
         self._login("s3-manager")
-        response = self._post("/api/cycles/", {"team_id": str(self.team.id), "kind": "review"})
-        self.assertEqual(response.status_code, 400)
+        review = self._post("/api/cycles/", {"team_id": str(self.team.id), "kind": "review"})
+        self.assertEqual(review.status_code, 201)
+        review_id = review.json()["id"]
+        notes = self._post(
+            f"/api/cycles/{review_id}/review/",
+            {
+                "plan_and_fact": "план и факт",
+                "results": "результаты",
+                "deviation_causes": "причины отклонений",
+                "changes": "что изменяем",
+                "stops": "что перестаём делать",
+                "reinforces": "что усиливаем",
+            },
+        )
+        self.assertEqual(notes.status_code, 200)
+        self.assertEqual(notes.json()["status"], "draft")
+        self._post(f"/api/cycles/{review_id}/advance/", {})
+        self._post(f"/api/cycles/{review_id}/advance/", {})
+        refused = self._post(f"/api/cycles/{review_id}/advance/", {})
+        self.assertEqual(refused.status_code, 400)
+        self.assertEqual(refused.json()["detail"], "Нужно резюме итогов")
+        self._post(f"/api/cycles/{review_id}/summary/", {"text": "Резюме итогов"})
+        closed = self._post(f"/api/cycles/{review_id}/advance/", {})
+        self.assertEqual(closed.status_code, 200)
+        self.assertEqual(closed.json()["status"], "closed")
+        self.assertEqual(closed.json()["summary"], "Резюме итогов")
+        self.assertEqual(closed.json()["review"]["stops"], "что перестаём делать")
+
+        retro = self._post("/api/cycles/", {"team_id": str(self.team.id), "kind": "retro"})
+        retro_id = retro.json()["id"]
+        dated = self._post(
+            f"/api/cycles/{retro_id}/schedule/",
+            {"scheduled_at": "2026-10-02T15:00:00Z"},
+        )
+        self.assertEqual(dated.json()["status"], "draft")
+        self._post(f"/api/cycles/{retro_id}/advance/", {})
+        self._post(f"/api/cycles/{retro_id}/advance/", {})
+        refused_retro = self._post(f"/api/cycles/{retro_id}/advance/", {})
+        self.assertEqual(refused_retro.status_code, 400)
+        self.assertEqual(refused_retro.json()["detail"], "Нужен план ретро")
+        empty_artifacts = self._post(
+            f"/api/cycles/{retro_id}/retro/",
+            {"plan": "План ретро", "artifacts": []},
+        )
+        self.assertEqual(empty_artifacts.status_code, 200)
+        self.assertEqual(empty_artifacts.json()["status"], "review")
+        closed_retro = self._post(f"/api/cycles/{retro_id}/advance/", {})
+        self.assertEqual(closed_retro.status_code, 200)
+        body = closed_retro.json()
+        self.assertEqual(body["status"], "closed")
+        self.assertEqual(body["kind"], "retro")
+        self.assertEqual(body["retro"]["plan"], "План ретро")
+        self.assertEqual(body["retro"]["artifacts"], [])
+        self.assertTrue(body["scheduled_at"].startswith("2026-10-02"))
+        self.assertEqual({code for code, _label in Cycle.STATUSES}, {"draft", "collect", "review", "closed"})
 
     def test_facilitator_advances_existing_cycle_and_does_not_create(self):
         self._login("s3-manager")
