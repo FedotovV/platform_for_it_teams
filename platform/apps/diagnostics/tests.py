@@ -4,6 +4,14 @@ from pathlib import Path
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from apps.diagnostics.api import (
+    FILL_BELOW_36,
+    FILL_BELOW_51,
+    FILL_BELOW_66,
+    FILL_BELOW_85,
+    FILL_FROM_85,
+    share_paint,
+)
 from apps.diagnostics.models import ColorBound
 from apps.teams.api import ROLE_MANAGER, ROLE_MEMBER
 from apps.teams.models import Membership
@@ -67,6 +75,7 @@ class SnapshotTests(TestCase):
         body = radar.json()
         self.assertEqual(body["snapshot"]["cycle_id"], second)
         self.assertIsNone(body["snapshot"]["blocks"][0]["color"])
+        self.assertIsNone(body["snapshot"]["scale_maximum"])
         self.assertNotIn("votes", json.dumps(body))
 
         page = self.client.get("/teams/selected/radar/")
@@ -91,6 +100,42 @@ class SnapshotTests(TestCase):
         self._login("s5-member")
         denied = self.client.get(f"/api/organizations/{self.org.id}/snapshots/")
         self.assertEqual(denied.status_code, 403)
+
+    def test_sector_color_follows_share_of_saved_maximum(self):
+        self.assertEqual(share_paint(3.55, 10)["fill"], FILL_BELOW_36)
+        self.assertEqual(share_paint(3.59, 10)["fill"], FILL_BELOW_36)
+        self.assertEqual(share_paint(3.6, 10)["fill"], FILL_BELOW_51)
+        self.assertEqual(share_paint(5.09, 10)["fill"], FILL_BELOW_51)
+        self.assertEqual(share_paint(5.1, 10)["fill"], FILL_BELOW_66)
+        self.assertEqual(share_paint(6.59, 10)["fill"], FILL_BELOW_66)
+        self.assertEqual(share_paint(6.6, 10)["fill"], FILL_BELOW_85)
+        self.assertEqual(share_paint(8.49, 10)["fill"], FILL_BELOW_85)
+        self.assertEqual(share_paint(8.5, 10)["fill"], FILL_FROM_85)
+        above = share_paint(12, 10)
+        self.assertEqual(above["percent_text"], "100")
+        self.assertEqual(above["fill"], FILL_FROM_85)
+        self.assertEqual(above["ratio"], 1)
+        self.assertIsNone(share_paint(None, 10))
+        self.assertIsNone(share_paint("", 10))
+        self.assertIsNone(share_paint(4, None))
+        self.assertIsNone(share_paint(4, 0))
+
+        self._login("s5-manager")
+        created = self._post("/api/cycles/", {"team_id": str(self.team.id), "kind": "survey"})
+        cycle_id = created.json()["id"]
+        saved = self._post(
+            f"/api/cycles/{cycle_id}/snapshot/",
+            {
+                "scale_version": None,
+                "scale_maximum": 10,
+                "blocks": [{"code": "block-1", "score": 5}],
+            },
+        )
+        self.assertEqual(saved.status_code, 200)
+        body = saved.json()
+        self.assertEqual(body["scale_maximum"], 10)
+        self.assertEqual(body["blocks"], [{"code": "block-1", "score": 5, "color": None}])
+        self.assertNotIn("chart_fill", body["blocks"][0])
 
     def test_color_bounds_are_not_seeded(self):
         self.assertFalse(ColorBound.objects.exists())

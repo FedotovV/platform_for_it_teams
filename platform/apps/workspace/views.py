@@ -285,7 +285,7 @@ def _cycle_post(request, user_id, cycle):
             if failure:
                 return failure
             version = request.POST.get("scale_version")
-            record_snapshot(user_id, cycle.id, version, blocks)
+            record_snapshot(user_id, cycle.id, version, blocks, request.POST.get("scale_maximum"))
             return None
     except (CycleError, DiagnosticError) as exc:
         return exc.detail
@@ -336,8 +336,11 @@ def _cycle_context(user_id, cycle, error):
     review_values = payload.get("review") or {field: "" for field in REVIEW_FIELDS}
     retro = payload.get("retro") or {"plan": "", "artifacts": []}
     blocks = []
+    scale_maximum = ""
     if payload.get("snapshot"):
         blocks = list(payload["snapshot"]["blocks"])
+        if payload["snapshot"].get("scale_maximum") not in (None, ""):
+            scale_maximum = payload["snapshot"]["scale_maximum"]
     while len(blocks) < 6:
         blocks.append({"code": "", "score": ""})
     return {
@@ -355,6 +358,7 @@ def _cycle_context(user_id, cycle, error):
         "retro_plan": retro.get("plan", ""),
         "retro_artifacts": "\n".join(retro.get("artifacts") or []),
         "blocks": blocks[:6],
+        "scale_maximum": scale_maximum,
         "changes": _changes("cycle", cycle.id),
         "files": _files(user_id, "cycle", cycle.id),
     }

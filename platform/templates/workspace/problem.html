@@ -1,22 +1,28 @@
 {% extends "base.html" %}
 {% block title %}Проблема{% endblock %}
 {% block content %}
-  <h1>{{ problem.text }}</h1>
-  <p>Источник: {{ problem.source_label }}</p>
-  <p>Статус: <span class="status" id="problem-status">{{ problem.status_label }}</span></p>
-  <p>{% if problem.for_discussion %}К обсуждению{% else %}Не помечена к обсуждению{% endif %}</p>
-  <p id="author-line">
-    {% if problem.author_label %}
-      Автор: {{ problem.author_label }}
-    {% elif problem.anonymous %}
-      Анонимная проблема. Автор скрыт.
-    {% else %}
-      Автор не показан.
-    {% endif %}
-  </p>
+  <header class="page-head">
+    <div>
+      <h1>{{ problem.text }}</h1>
+      <p class="lede">Источник: {{ problem.source_label }}</p>
+    </div>
+    <span class="status" id="problem-status">{{ problem.status_label }}</span>
+  </header>
+  <section class="panel">
+    <p>{% if problem.for_discussion %}К обсуждению{% else %}Не помечена к обсуждению{% endif %}</p>
+    <p id="author-line">
+      {% if problem.author_label %}
+        Автор: {{ problem.author_label }}
+      {% elif problem.anonymous %}
+        Анонимная проблема. Автор скрыт.
+      {% else %}
+        Автор не показан.
+      {% endif %}
+    </p>
+  </section>
   {% if error %}<p class="error" id="problem-error">{{ error }}</p>{% endif %}
 
-  <form id="problem-status-form" method="post">
+  <form id="problem-status-form" class="panel" method="post">
     {% csrf_token %}
     <input type="hidden" name="form" value="status">
     <label for="status">Статус проблемы</label>
@@ -28,76 +34,85 @@
     <button type="submit">Сохранить статус</button>
   </form>
 
-  <h2>Связи с циклами</h2>
-  <p class="muted">Перенос — связь с циклом, не статус.</p>
-  <ul id="problem-links">
-    {% for link in links %}
-      <li>{{ link.kind_label }}: {{ link.cycle_id }}</li>
-    {% empty %}
-      <li>Связей нет.</li>
-    {% endfor %}
-  </ul>
-  <form id="carry-form" method="post">
-    {% csrf_token %}
-    <input type="hidden" name="form" value="carry">
-    <label for="carry-cycle">Перенести в цикл</label>
-    <select id="carry-cycle" name="cycle_id">
-      {% for cycle in cycles %}
-        <option value="{{ cycle.id }}">{{ cycle.label }}</option>
+  <section class="panel">
+    <h2>Связи с циклами</h2>
+    <p class="muted">Перенос — связь с циклом, не статус.</p>
+    <ul id="problem-links" class="plain">
+      {% for link in links %}
+        <li>{{ link.kind_label }}: {{ link.cycle_id }}</li>
+      {% empty %}
+        <li class="empty">Связей нет.</li>
       {% endfor %}
-    </select>
-    <button type="submit">Перенести</button>
-  </form>
+    </ul>
+    <form id="carry-form" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="form" value="carry">
+      <label for="carry-cycle">Перенести в цикл</label>
+      <select id="carry-cycle" name="cycle_id">
+        {% for cycle in cycles %}
+          <option value="{{ cycle.id }}">{{ cycle.label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Перенести</button>
+    </form>
+  </section>
 
-  <h2>Действия</h2>
-  <ul id="action-list">
-    {% for action in actions %}
-      <li>
-        <a href="{% url 'workspace-action' action.id %}">{{ action.status_label }}</a>
-        — {{ action.owner_label }}
-        {% if action.due_at %}<span>срок {{ action.due_at }}</span>{% endif %}
-      </li>
-    {% empty %}
-      <li>Действий нет.</li>
-    {% endfor %}
-  </ul>
-  <form id="action-form" method="post">
-    {% csrf_token %}
-    <input type="hidden" name="form" value="action">
-    <label for="owner_id">Владелец</label>
-    <select id="owner_id" name="owner_id">
-      {% for member in members %}
-        <option value="{{ member.id }}">{{ member.label }}</option>
+  <div class="split">
+    <section class="panel">
+      <h2>Действия</h2>
+      <ul id="action-list" class="plain">
+        {% for action in actions %}
+          <li>
+            <a href="{% url 'workspace-action' action.id %}">{{ action.status_label }}</a>
+            <span class="muted">{{ action.owner_label }}</span>
+            {% if action.due_at %}<span class="muted">срок {{ action.due_at }}</span>{% endif %}
+          </li>
+        {% empty %}
+          <li class="empty">Действий нет.</li>
+        {% endfor %}
+      </ul>
+      <form id="action-form" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="form" value="action">
+        <label for="owner_id">Владелец</label>
+        <select id="owner_id" name="owner_id">
+          {% for member in members %}
+            <option value="{{ member.id }}">{{ member.label }}</option>
+          {% endfor %}
+        </select>
+        <label for="due_at">Срок</label>
+        <input id="due_at" name="due_at" type="datetime-local">
+        <button type="submit">Добавить действие</button>
+      </form>
+    </section>
+    <section class="panel">
+      <h2>Вложение</h2>
+      <ul id="file-list" class="plain">
+        {% for file in files %}
+          <li><a href="{% url 'attachment' file.id %}">{{ file.filename }}</a></li>
+        {% empty %}
+          <li class="empty">Файлов нет.</li>
+        {% endfor %}
+      </ul>
+      <form id="attachment-form" class="attach-form" method="post" action="{% url 'workspace-attachment' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="target_kind" value="problem">
+        <input type="hidden" name="target_id" value="{{ problem.id }}">
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <input type="file" name="file" required>
+        <button type="submit">Приложить файл</button>
+      </form>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Смены статусов</h2>
+    <ul id="status-changes" class="plain">
+      {% for change in changes %}
+        <li>{{ change.from_label }} → {{ change.to_label }} — {{ change.actor_label }}, {{ change.at }}</li>
+      {% empty %}
+        <li class="empty">Смен ещё нет.</li>
       {% endfor %}
-    </select>
-    <label for="due_at">Срок</label>
-    <input id="due_at" name="due_at" type="datetime-local">
-    <button type="submit">Добавить действие</button>
-  </form>
-
-  <h2>Вложение</h2>
-  <ul id="file-list">
-    {% for file in files %}
-      <li><a href="{% url 'attachment' file.id %}">{{ file.filename }}</a></li>
-    {% empty %}
-      <li>Файлов нет.</li>
-    {% endfor %}
-  </ul>
-  <form id="attachment-form" method="post" action="{% url 'workspace-attachment' %}" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="hidden" name="target_kind" value="problem">
-    <input type="hidden" name="target_id" value="{{ problem.id }}">
-    <input type="hidden" name="next" value="{{ request.path }}">
-    <input type="file" name="file" required>
-    <button type="submit">Приложить файл</button>
-  </form>
-
-  <h2>Смены статусов</h2>
-  <ul id="status-changes" class="plain">
-    {% for change in changes %}
-      <li>{{ change.from_label }} → {{ change.to_label }} — {{ change.actor_label }}, {{ change.at }}</li>
-    {% empty %}
-      <li>Смен ещё нет.</li>
-    {% endfor %}
-  </ul>
+    </ul>
+  </section>
 {% endblock %}

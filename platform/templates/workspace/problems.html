@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Проблемы{% endblock %}
 {% block content %}
-  <h1>Проблемы</h1>
-  {% if team %}
-    <p>Команда: {{ team.name }}</p>
-  {% else %}
-    <p>Сначала выберите команду.</p>
-  {% endif %}
+  <header class="page-head">
+    <div>
+      <h1>Проблемы</h1>
+      {% if team %}
+        <p class="lede">Команда: {{ team.name }}</p>
+      {% else %}
+        <p class="lede">Сначала выберите команду.</p>
+      {% endif %}
+    </div>
+  </header>
   {% if error %}<p class="error" id="problem-error">{{ error }}</p>{% endif %}
-  <form id="problem-form" method="post">
+  <form id="problem-form" class="panel" method="post">
     {% csrf_token %}
+    <h2>Новая проблема</h2>
     <label for="text">Текст</label>
     <textarea id="text" name="text" required></textarea>
     <label for="source">Источник</label>
@@ -18,8 +23,8 @@
         <option value="{{ code }}">{{ label }}</option>
       {% endfor %}
     </select>
-    <label><input type="checkbox" name="for_discussion"> К обсуждению</label>
-    <label><input type="checkbox" name="anonymous"> Анонимно</label>
+    <label class="check"><input type="checkbox" name="for_discussion"> К обсуждению</label>
+    <label class="check"><input type="checkbox" name="anonymous"> Анонимно</label>
     <label for="cycle_id">Цикл, если проблема поднята в нём</label>
     <select id="cycle_id" name="cycle_id">
       <option value="">Без цикла</option>
@@ -29,16 +34,18 @@
     </select>
     <button type="submit">Поднять проблему</button>
   </form>
-  <ul class="plain" id="problem-list">
-    {% for problem in problems %}
-      <li>
-        <a href="{% url 'workspace-problem' problem.id %}">{{ problem.text }}</a>
-        <span class="status">{{ problem.status_label }}</span>
-        <span class="muted">{{ problem.source_label }}</span>
-        {% if problem.anonymous %}<span>анонимно</span>{% endif %}
-      </li>
-    {% empty %}
-      <li>Проблем нет.</li>
-    {% endfor %}
-  </ul>
+  <section class="panel">
+    <ul class="plain" id="problem-list">
+      {% for problem in problems %}
+        <li>
+          <a href="{% url 'workspace-problem' problem.id %}">{{ problem.text }}</a>
+          <span class="status">{{ problem.status_label }}</span>
+          <span class="muted">{{ problem.source_label }}</span>
+          {% if problem.anonymous %}<span class="muted">анонимно</span>{% endif %}
+        </li>
+      {% empty %}
+        <li class="empty">Проблем нет.</li>
+      {% endfor %}
+    </ul>
+  </section>
 {% endblock %}

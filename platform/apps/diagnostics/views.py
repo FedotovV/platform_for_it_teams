@@ -3,7 +3,7 @@ import uuid
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import render
 
-from apps.diagnostics.api import snapshot_for, team_snapshot_pair
+from apps.diagnostics.api import BAND_LEGEND, present_blocks, snapshot_for, team_snapshot_pair
 from apps.diagnostics.services import DiagnosticError, record_snapshot
 from apps.identity.api import current_user_id
 from apps.teams.api import (
@@ -34,6 +34,7 @@ def snapshot_view(request, cycle_id):
             cycle_id,
             body.get("scale_version"),
             body.get("blocks"),
+            body.get("scale_maximum"),
         )
     except DiagnosticError as exc:
         return respond({"detail": exc.detail}, status=exc.status)
@@ -59,10 +60,12 @@ def radar_page(request):
     snapshot = None
     if team_id is not None and can_see_team(user_id, team_id):
         snapshot, _previous = team_snapshot_pair(team_id, with_color=True)
+        if snapshot is not None:
+            snapshot = present_blocks(snapshot)
     return render(
         request,
         "diagnostics/radar.html",
-        {"team_id": team_id, "snapshot": snapshot},
+        {"team_id": team_id, "snapshot": snapshot, "band_legend": BAND_LEGEND},
     )
 
 

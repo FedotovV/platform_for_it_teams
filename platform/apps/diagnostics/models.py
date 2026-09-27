@@ -7,6 +7,7 @@ class SurveySnapshot(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     cycle_id = models.UUIDField(unique=True)
     scale_version = models.CharField("версия шкалы", max_length=64, null=True, blank=True)
+    scale_maximum = models.FloatField("максимум баллов", null=True, blank=True)
     blocks = models.JSONField("баллы блоков", default=list)
 
     class Meta:
@@ -15,7 +16,7 @@ class SurveySnapshot(models.Model):
 
 
 class ColorBound(models.Model):
-    """Границы цветов. Строк нет, пока их не зададут при моделировании."""
+    """Абсолютные границы. Строк нет: сектор красится от доли максимума шкалы."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     label = models.CharField(max_length=64)

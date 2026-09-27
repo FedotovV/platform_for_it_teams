@@ -10,7 +10,7 @@ class DiagnosticError(Exception):
         self.status = status
 
 
-def record_snapshot(user_id, cycle_id, scale_version, blocks):
+def record_snapshot(user_id, cycle_id, scale_version, blocks, scale_maximum=None):
     brief = cycle_brief(cycle_id)
     if brief is None or not can_see_team(user_id, brief["team_id"]):
         raise DiagnosticError("Цикл не найден", status=404)
@@ -26,7 +26,11 @@ def record_snapshot(user_id, cycle_id, scale_version, blocks):
         version = version.strip() or None
     row, _created = SurveySnapshot.objects.update_or_create(
         cycle_id=cycle_id,
-        defaults={"scale_version": version, "blocks": cleaned},
+        defaults={
+            "scale_version": version,
+            "scale_maximum": _maximum(scale_maximum),
+            "blocks": cleaned,
+        },
     )
     return row
 
@@ -46,3 +50,21 @@ def _blocks(blocks):
             raise DiagnosticError("Балл блока — число")
         cleaned.append({"code": code.strip(), "score": score})
     return cleaned
+
+
+def _maximum(value):
+    if value is None or value == "":
+        return None
+    if isinstance(value, str):
+        text = value.strip().replace(",", ".")
+        if text == "":
+            return None
+        try:
+            value = float(text) if "." in text else int(text)
+        except ValueError:
+            raise DiagnosticError("Максимум шкалы — число")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise DiagnosticError("Максимум шкалы — число")
+    if value <= 0:
+        raise DiagnosticError("Максимум шкалы — число больше нуля")
+    return value

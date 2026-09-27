@@ -2,19 +2,46 @@
 {% load static %}
 {% block title %}Радар{% endblock %}
 {% block content %}
-  <h1>Радар</h1>
+  <header class="page-head">
+    <div>
+      <h1>Радар</h1>
+      {% if snapshot %}
+        <p class="lede">Версия шкалы: {% if snapshot.scale_version %}{{ snapshot.scale_version }}{% else %}нет{% endif %}</p>
+      {% endif %}
+    </div>
+  </header>
   {% if snapshot %}
-    <p>Версия шкалы: {% if snapshot.scale_version %}{{ snapshot.scale_version }}{% else %}нет{% endif %}</p>
-    <p id="radar-unpainted">Цвет секторов не задан. Баллы видны, заливка не применяется.</p>
-    <ul id="radar-scores">
-      {% for block in snapshot.blocks %}
-        <li>{{ block.code }}: {{ block.score }}</li>
-      {% endfor %}
-    </ul>
+    <p class="lede">Сектор красится по доле балла от максимума шкалы. 100% — этот максимум.</p>
+    <p>Максимум баллов: <span id="scale-maximum">{% if snapshot.scale_maximum %}{{ snapshot.scale_maximum }}{% else %}не записан{% endif %}</span></p>
+    {% if not snapshot.scale_maximum %}
+      <p class="muted">Максимум не записан, поэтому сектор не закрашен.</p>
+    {% endif %}
+    <div class="layout-radar">
+      <section class="panel">
+        <h2>Баллы</h2>
+        <ul id="radar-scores" class="plain">
+          {% for block in snapshot.blocks %}
+            <li>
+              <span>{{ block.code }}: {{ block.score }}</span>
+              {% if block.chart_fill %}
+                <span class="swatch" style="background: {{ block.chart_fill }}"></span>
+                <span class="muted">{{ block.chart_percent }}%</span>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+        <ul class="legend">
+          {% for item in band_legend %}
+            <li><span class="swatch" style="background: {{ item.fill }}"></span> {{ item.label }}</li>
+          {% endfor %}
+        </ul>
+        <p class="muted">Верх полосы в неё не входит. Последняя полоса начинается с 85%.</p>
+      </section>
+      <div id="radar-chart"></div>
+    </div>
     {{ snapshot|json_script:"radar-data" }}
-    <div id="radar-chart"></div>
     <script src="{% static 'radar.js' %}"></script>
   {% else %}
-    <p>Снимка нет.</p>
+    <p class="empty panel">Снимка нет.</p>
   {% endif %}
 {% endblock %}

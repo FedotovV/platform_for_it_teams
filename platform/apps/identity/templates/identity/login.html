@@ -8,16 +8,19 @@
   <link rel="stylesheet" href="{% static 'app.css' %}">
 </head>
 <body>
-  <main>
-    <h1>Вход</h1>
-    {% if error %}
-      <p class="error" id="login-error">{{ error }}</p>
-    {% endif %}
-    <form id="login-form" method="post" action="{% url 'login' %}">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit">Войти</button>
-    </form>
+  <main class="login-wrap">
+    <section class="panel login-card">
+      <p class="eyebrow">Платформа команды</p>
+      <h1>Вход</h1>
+      {% if error %}
+        <p class="error" id="login-error">{{ error }}</p>
+      {% endif %}
+      <form id="login-form" method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Войти</button>
+      </form>
+    </section>
   </main>
 </body>
 </html>
