@@ -103,3 +103,11 @@ def select_team(user_id, team_id):
         defaults={"team_id": team_id},
     )
     return True
+
+
+def memberships_for(user_id, team_id):
+    """Состав видимой команды. None, если команду нельзя видеть."""
+    if not can_see_team(user_id, team_id):
+        return None
+    rows = Membership.objects.filter(team_id=team_id).order_by("role", "user_id")
+    return [{"user_id": row.user_id, "role": row.role} for row in rows]

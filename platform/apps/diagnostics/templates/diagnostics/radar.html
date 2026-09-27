@@ -1,20 +1,20 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <title>Радар</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Радар{% endblock %}
+{% block content %}
   <h1>Радар</h1>
   {% if snapshot %}
     <p>Версия шкалы: {% if snapshot.scale_version %}{{ snapshot.scale_version }}{% else %}нет{% endif %}</p>
-    <ul>
+    <p id="radar-unpainted">Цвет секторов не задан. Баллы видны, заливка не применяется.</p>
+    <ul id="radar-scores">
       {% for block in snapshot.blocks %}
         <li>{{ block.code }}: {{ block.score }}</li>
       {% endfor %}
     </ul>
+    {{ snapshot|json_script:"radar-data" }}
+    <div id="radar-chart"></div>
+    <script src="{% static 'radar.js' %}"></script>
   {% else %}
     <p>Снимка нет.</p>
   {% endif %}
-</body>
-</html>
+{% endblock %}

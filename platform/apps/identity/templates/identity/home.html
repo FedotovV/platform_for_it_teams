@@ -1,14 +1,27 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <title>Сессия</title>
-</head>
-<body>
-  <p>Вы вошли. Идентификатор: {{ user_id }}</p>
-  <form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Выйти</button>
-  </form>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Команды{% endblock %}
+{% block content %}
+  <h1>Команды</h1>
+  <p id="session-user">Вы вошли. Идентификатор: {{ user_id }}</p>
+  {% if user_name %}<p>{{ user_name }}</p>{% endif %}
+  {% if teams %}
+    <ul id="team-list" class="plain">
+      {% for team in teams %}
+        <li class="card team{% if team.selected %} selected{% endif %}" data-team-name="{{ team.name }}">
+          <div>
+            <strong>{{ team.name }}</strong>
+            {% if team.role_label %}<span class="muted">{{ team.role_label }}</span>{% endif %}
+            {% if team.selected %}<span class="status">выбрана</span>{% endif %}
+          </div>
+          <form method="post" action="{% url 'workspace-select-team' %}">
+            {% csrf_token %}
+            <input type="hidden" name="team_id" value="{{ team.id }}">
+            <button type="submit">Открыть</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Нет доступных команд.</p>
+  {% endif %}
+{% endblock %}

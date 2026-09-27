@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Действие{% endblock %}
+{% block content %}
+  <h1>Действие</h1>
+  <p>Владелец: {{ action.owner_label }}</p>
+  <p>Статус: <span class="status" id="action-status">{{ action.status_label }}</span></p>
+  <p id="action-due">Срок: {% if action.due_at %}{{ action.due_at }}{% else %}не задан{% endif %}</p>
+  <p class="muted">Срок сам не переводит действие в «не сделано». Закрытие цикла статус действия не меняет.</p>
+  {% if error %}<p class="error" id="action-error">{{ error }}</p>{% endif %}
+  <form id="action-status-form" method="post">
+    {% csrf_token %}
+    <label for="status">Статус</label>
+    <select id="status" name="status">
+      {% for code, label in statuses %}
+        <option value="{{ code }}"{% if code == action.status %} selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Сохранить статус</button>
+  </form>
+  <p><a href="{% url 'workspace-problem' action.problem_id %}">К проблеме</a></p>
+
+  <h2>Вложение</h2>
+  <ul id="file-list">
+    {% for file in files %}
+      <li><a href="{% url 'attachment' file.id %}">{{ file.filename }}</a></li>
+    {% empty %}
+      <li>Файлов нет.</li>
+    {% endfor %}
+  </ul>
+  <form id="attachment-form" method="post" action="{% url 'workspace-attachment' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="target_kind" value="action">
+    <input type="hidden" name="target_id" value="{{ action.id }}">
+    <input type="hidden" name="next" value="{{ request.path }}">
+    <input type="file" name="file" required>
+    <button type="submit">Приложить файл</button>
+  </form>
+
+  <h2>Смены статусов</h2>
+  <ul id="status-changes" class="plain">
+    {% for change in changes %}
+      <li>{{ change.from_label }} → {{ change.to_label }} — {{ change.actor_label }}, {{ change.at }}</li>
+    {% empty %}
+      <li>Смен ещё нет.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

@@ -75,6 +75,20 @@ def store_attachment(user_id, target_kind, target_id, upload):
     )
 
 
+def attachments_for(user_id, target_kind, target_id):
+    """Вложения видимого объекта. None, если объект чужой или неизвестный."""
+    if target_kind not in TARGETS:
+        return None
+    team_id = object_team_id(target_kind, target_id)
+    if team_id is None or not can_see_team(user_id, team_id):
+        return None
+    rows = Attachment.objects.filter(
+        target_kind=target_kind,
+        target_id=target_id,
+    ).order_by("created_at", "id")
+    return [{"id": row.id, "filename": row.filename} for row in rows]
+
+
 def open_attachment(user_id, attachment_id):
     row = Attachment.objects.filter(pk=attachment_id).first()
     if row is None:

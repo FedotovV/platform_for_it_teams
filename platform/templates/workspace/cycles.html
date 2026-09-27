@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Циклы{% endblock %}
+{% block content %}
+  <h1>Циклы</h1>
+  {% if team %}
+    <p>Команда: {{ team.name }}</p>
+  {% else %}
+    <p>Сначала выберите команду.</p>
+  {% endif %}
+  {% if error %}<p class="error" id="cycle-error">{{ error }}</p>{% endif %}
+  <form id="create-cycle" method="post">
+    {% csrf_token %}
+    <label for="kind">Вид</label>
+    <select id="kind" name="kind">
+      {% for code, label in kinds %}
+        <option value="{{ code }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Создать цикл</button>
+  </form>
+  <ul class="plain" id="cycle-list">
+    {% for cycle in cycles %}
+      <li>
+        <a href="{% url 'workspace-cycle' cycle.id %}">{{ cycle.kind_label }}</a>
+        <span class="status">{{ cycle.status_label }}</span>
+        <span class="muted">{{ cycle.id }}</span>
+        {% if cycle.snapshot %}
+          {% for block in cycle.snapshot.blocks %}
+            <span>{{ block.code }}: {{ block.score }}</span>
+          {% endfor %}
+        {% endif %}
+      </li>
+    {% empty %}
+      <li>Циклов нет.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

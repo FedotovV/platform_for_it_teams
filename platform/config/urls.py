@@ -11,4 +11,5 @@ urlpatterns = [
     path("", include("apps.diagnostics.urls")),
     path("", include("apps.problems.urls")),
     path("", include("apps.history.urls")),
+    path("", include("apps.workspace.urls")),
 ]

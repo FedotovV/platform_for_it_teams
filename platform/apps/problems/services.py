@@ -120,6 +120,29 @@ def load_action(user_id, action_id):
     return action
 
 
+def problems_for_team(user_id, team_id):
+    """Проблемы видимой команды. Автор скрыт тем же правилом, что и в карточке."""
+    if not can_see_team(user_id, team_id):
+        return None
+    from apps.problems.api import problem_payload
+
+    rows = (
+        Problem.objects.filter(team_id=team_id)
+        .prefetch_related("links")
+        .order_by("id")
+    )
+    return [problem_payload(row, user_id) for row in rows]
+
+
+def actions_for_problem(user_id, problem_id):
+    problem = load_problem(user_id, problem_id)
+    if problem is None:
+        return None
+    from apps.problems.api import action_payload
+
+    return [action_payload(row) for row in problem.actions.all().order_by("id")]
+
+
 def set_action_status(user_id, action_id, status):
     action = load_action(user_id, action_id)
     if action is None:

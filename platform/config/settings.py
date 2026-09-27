@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "apps.diagnostics.apps.DiagnosticsConfig",
     "apps.problems.apps.ProblemsConfig",
     "apps.history.apps.HistoryConfig",
+    "apps.workspace.apps.WorkspaceConfig",
 ]
 
 MIDDLEWARE = [
@@ -50,6 +51,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "apps.workspace.context.workspace",
             ],
         },
     },

@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Платформа команды{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'app.css' %}">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="{% url 'home' %}">Платформа команды</a>
+    {% if nav_user_id %}
+      <nav>
+        <a href="{% url 'home' %}">Команды</a>
+        <a href="{% url 'workspace-cycles' %}">Циклы</a>
+        <a href="{% url 'workspace-problems' %}">Проблемы</a>
+        <a href="{% url 'radar-page' %}">Радар</a>
+        {% if nav_selected_team_id %}
+          <a href="{% url 'team-history-page' nav_selected_team_id %}">История</a>
+        {% endif %}
+        {% if nav_is_org_leader %}
+          <a href="{% url 'workspace-organization' %}">Агрегаты</a>
+        {% endif %}
+      </nav>
+      <form id="logout-form" method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <span>{{ nav_user_name }}</span>
+        <span>Идентификатор: {{ nav_user_id }}</span>
+        <button type="submit">Выйти</button>
+      </form>
+    {% endif %}
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

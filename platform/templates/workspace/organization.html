@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Агрегаты{% endblock %}
+{% block content %}
+  <h1>Агрегаты снимков</h1>
+  <p>Баллы блоков по командам: последний снимок и предыдущий, если он есть.</p>
+  <div id="org-aggregates">
+    {% for team in teams %}
+      <section class="card" data-team-name="{{ team.name }}">
+        <h2>{{ team.name }}</h2>
+        <h3>Последний снимок</h3>
+        {% if team.latest %}
+          <ul>
+            {% for block in team.latest.blocks %}
+              <li>{{ block.code }}: {{ block.score }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>Снимка нет.</p>
+        {% endif %}
+        <h3>Предыдущий снимок</h3>
+        {% if team.previous %}
+          <ul>
+            {% for block in team.previous.blocks %}
+              <li>{{ block.code }}: {{ block.score }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>Предыдущего снимка нет.</p>
+        {% endif %}
+      </section>
+    {% empty %}
+      <p>Команд нет.</p>
+    {% endfor %}
+  </div>
+{% endblock %}
