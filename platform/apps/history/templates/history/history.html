@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>История</title>
+</head>
+<body>
+  <h1>История</h1>
+  <ul>
+    {% for cycle in cycles %}
+      <li>
+        {{ cycle.kind }} {{ cycle.status }}
+        {% if cycle.snapshot %}
+          {% for block in cycle.snapshot.blocks %}
+            {{ block.code }}: {{ block.score }}
+          {% endfor %}
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

@@ -71,8 +71,14 @@ def set_problem_status(user_id, problem_id, status):
         raise ProblemError("Неизвестный статус")
     if status == Problem.STATUS_IN_PROGRESS and not problem.actions.exists():
         raise ProblemError("Нужно действие, чтобы поставить проблему в работу")
+    previous = problem.status
+    if previous == status:
+        return problem
     problem.status = status
     problem.save(update_fields=["status"])
+    from apps.history.api import record_status_change
+
+    record_status_change("problem", problem.id, previous, status, user_id)
     return problem
 
 
@@ -120,6 +126,12 @@ def set_action_status(user_id, action_id, status):
         raise ProblemError("Действие не найдено", status=404)
     if status not in ACTION_STATUSES:
         raise ProblemError("Неизвестный статус")
+    previous = action.status
+    if previous == status:
+        return action
     action.status = status
     action.save(update_fields=["status"])
+    from apps.history.api import record_status_change
+
+    record_status_change("action", action.id, previous, status, user_id)
     return action

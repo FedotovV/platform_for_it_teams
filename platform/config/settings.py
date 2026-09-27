@@ -88,5 +88,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+ATTACHMENT_ROOT = BASE_DIR / "var" / "attachments"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
