@@ -1,6 +1,6 @@
 from django.utils import timezone
 
-from apps.cycles.models import Cycle, CycleSummary
+from apps.cycles.models import Cycle, CycleSummary, RetroRecord
 
 # Единственное место переходов статуса. Обработчики экрана сюда не пишут правила.
 FORWARD = (
@@ -25,7 +25,7 @@ def advance(cycle, user_id):
         raise CycleError("Цикл уже закрыт")
     target = FORWARD[index + 1]
     if target == Cycle.STATUS_CLOSED and not _outcome_recorded(cycle):
-        raise CycleError("Нужно резюме: план и следующие шаги")
+        raise CycleError(outcome_missing_detail(cycle.kind))
     cycle.status = target
     if target == Cycle.STATUS_CLOSED:
         cycle.closed_at = timezone.now()
@@ -41,8 +41,22 @@ def set_schedule(cycle, scheduled_at):
     return cycle
 
 
+def outcome_missing_detail(kind):
+    if kind == Cycle.KIND_RETRO:
+        return "Нужен план ретро"
+    if kind == Cycle.KIND_REVIEW:
+        return "Нужно резюме итогов"
+    return "Нужно резюме: план и следующие шаги"
+
+
 def _outcome_recorded(cycle):
-    if cycle.kind != Cycle.KIND_SURVEY:
+    if cycle.kind == Cycle.KIND_RETRO:
+        try:
+            plan = cycle.retro_record.plan
+        except RetroRecord.DoesNotExist:
+            return False
+        return bool(plan and plan.strip())
+    if cycle.kind not in (Cycle.KIND_SURVEY, Cycle.KIND_REVIEW):
         return False
     try:
         text = cycle.summary.text

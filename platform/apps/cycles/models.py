@@ -65,9 +65,13 @@ class TeamSurveySettings(models.Model):
 
 
 class ReviewNotes(models.Model):
-    """Пустая таблица до наполнения ревью. Полей состава здесь нет."""
-
     cycle = models.OneToOneField(Cycle, on_delete=models.CASCADE, related_name="review_notes")
+    plan_and_fact = models.TextField("план и факт", blank=True)
+    results = models.TextField("результаты", blank=True)
+    deviation_causes = models.TextField("причины отклонений", blank=True)
+    changes = models.TextField("что изменяем", blank=True)
+    stops = models.TextField("что перестаём делать", blank=True)
+    reinforces = models.TextField("что усиливаем", blank=True)
 
     class Meta:
         verbose_name = "заметки ревью"
@@ -75,9 +79,9 @@ class ReviewNotes(models.Model):
 
 
 class RetroRecord(models.Model):
-    """Пустая таблица до плана и артефактов ретро."""
-
     cycle = models.OneToOneField(Cycle, on_delete=models.CASCADE, related_name="retro_record")
+    plan = models.TextField("план", blank=True)
+    artifacts = models.JSONField("артефакты", default=list, blank=True)
 
     class Meta:
         verbose_name = "запись ретро"
